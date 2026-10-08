@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ข้อสอบวัดผลวิชา Digital Image Processing - บทที่ 5</title>
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #cbd5e1;
+            --correct-bg: #dcfce7;
+            --correct-border: #16a34a;
+            --correct-text: #14532d;
+            --partial-bg: #fef9c3;
+            --partial-border: #ca8a04;
+            --partial-text: #713f12;
+            --wrong-bg: #fee2e2;
+            --wrong-border: #dc2626;
+            --wrong-text: #7f1d1d;
+        }
+
+        body {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background-color: var(--primary);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0 0 8px 0;
+            font-size: 1.6rem;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        .score-dashboard {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-around;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .question-desc {
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 90px;
+            box-sizing: border-box;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+            margin-bottom: 12px;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-submit {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.9;
+        }
+
+        .feedback-box {
+            display: none;
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .feedback-box.correct {
+            display: block;
+            background-color: var(--correct-bg);
+            border: 1.5px solid var(--correct-border);
+            color: var(--correct-text);
+        }
+
+        .feedback-box.partial {
+            display: block;
+            background-color: var(--partial-bg);
+            border: 1.5px solid var(--partial-border);
+            color: var(--partial-text);
+        }
+
+        .feedback-box.wrong {
+            display: block;
+            background-color: var(--wrong-bg);
+            border: 1.5px solid var(--wrong-border);
+            color: var(--wrong-text);
+        }
+
+        .sol-title {
+            font-weight: bold;
+            margin-top: 8px;
+            text-decoration: underline;
+        }
+
+        pre {
+            background: #f1f5f9;
+            padding: 8px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>ข้อสอบอัตนัยและการคำนวณ: บทที่ 5 การรู้จำวัตถุและการแปลความหมาย</h1>
+        <p>รายวิชา Digital Image Processing | รวม 15 ข้อ พร้อมระบบวิเคราะห์คำตอบตามเกณฑ์ทางวิชาการ</p>
+    </div>
+
+    <div class="score-dashboard">
+        <span style="color: var(--correct-border);">ถูกต้องสมบูรณ์ (เขียว): <span id="count-correct">0</span></span>
+        <span style="color: var(--partial-border);">เข้าโครง/เกือบถูก (เหลือง): <span id="count-partial">0</span></span>
+        <span style="color: var(--wrong-border);">ยังไม่ถูกต้อง (แดง): <span id="count-wrong">0</span></span>
+    </div>
+
+    <form id="quiz-form">
+        <div id="questions-container"></div>
+    </form>
+</div>
+
+<script>
+const examQuestions = [
+    {
+        id: 1,
+        title: "ข้อที่ 1: หลักการทำงานของ Nearest Neighbor (NN)",
+        desc: "จงอธิบายขั้นตอนการทำงานของตัวจำแนกประเภทแบบ Nearest Neighbor (1-NN) ทั้งในขั้นตอนการเรียนรู้ (Learning Phase) และขั้นตอนการจำแนกประเภท (Classification Phase) พร้อมระบุข้อจำกัดสำคัญ",
+        keywords: ["เวกเตอร์ลักษณะเฉพาะ", "ระยะห่าง", "น้อยที่สุด", "noise", "สัญญาณรบกวน"],
+        partialKeywords: ["ระยะห่าง", "ใกล้ที่สุด"],
+        solution: "1. ขั้นตอนการเรียนรู้: แทนโมเดลของแต่ละคลาสด้วยเซตของเวกเตอร์ลักษณะเฉพาะ (Feature Vectors) ของสมาชิกในคลาส\n2. ขั้นตอนการจำแนก: นำเวกเตอร์ลักษณะเฉพาะของวัตถุทดสอบมาคำนวณระยะห่างกับเวกเตอร์ทั้งหมดในฐานข้อมูล แล้วกำหนดให้อยู่ในคลาสเดียวกับเวกเตอร์ที่มีระยะห่างน้อยที่สุด\n3. ข้อจำกัด: ไวต่อจุดรบกวนหรือข้อมูลผิดปกติ (Noise / Outliers) อย่างมาก"
+    },
+    {
+        id: 2,
+        title: "ข้อที่ 2: หลักการทำงานของ Minimum Mean Distance",
+        desc: "ตัวจำแนกประเภทแบบ Minimum Mean Distance มีกลไกลดความซับซ้อนในการคำนวณอย่างไรเมื่อเทียบกับ Nearest Neighbor ในขั้นตอนการจำแนกประเภท?",
+        keywords: ["เวกเตอร์ค่ากลาง", "ค่าเฉลี่ย", "centroid", "mj", "ตัวแทน"],
+        partialKeywords: ["ค่ากลาง", "ค่าเฉลี่ย", "เร็วขึ้น"],
+        solution: "แทนที่จะต้องคำนวณระยะทางกับจุดข้อมูลทั้งหมดทุกจุด วิธีนี้จะหา 'เวกเตอร์ค่ากลาง' (Mean Vector / Centroid: mj) ของแต่ละคลาสขึ้นมาเป็นตัวแทนในขั้นตอนการเรียนรู้ แล้วคำนวณระยะห่างระหว่างวัตถุทดสอบกับเวกเตอร์ค่ากลางเท่านั้น ทำให้ความซับซ้อนลดลงเหลือเพียง O(C * n) เมื่อ C คือจำนวนคลาส"
+    },
+    {
+        id: 3,
+        title: "ข้อที่ 3: เกณฑ์ประเมินคุณภาพชุดข้อมูลตัวอย่าง (Training Data Quality)",
+        desc: "ตามหัวข้อ 5.2.1 เกณฑ์ที่ใช้ชี้วัดว่าชุดข้อมูลมีความเหมาะสมในการนำไปสร้างโมเดลต้นแบบมี 2 ปัจจัยหลักคืออะไร และมีเงื่อนไขอย่างไรจึงจะถือว่าเป็นข้อมูลที่ดี?",
+        keywords: ["ภายใน", "ระหว่าง", "variance", "distance", "น้อย", "มาก"],
+        partialKeywords: ["ภายใน", "ระหว่าง", "ความแปรปรวน"],
+        solution: "1. ความแตกต่าง/ความแปรปรวนภายในคลาสเดียวกัน (Within-Class Variance / std): ยิ่งน้อยยิ่งดี เพราะแสดงว่าข้อมูลในกลุ่มเดียวกันเกาะกลุ่มแน่น (Compactness)\n2. ความแตกต่าง/ระยะห่างระหว่างคลาส (Between-Class Distance): ยิ่งมากยิ่งดี เพราะแสดงว่าแต่ละกลุ่มแยกออกจากกันชัดเจน (Separability)"
+    },
+    {
+        id: 4,
+        title: "ข้อที่ 4: ความแตกต่างทางแนวคิดระหว่าง Precision และ Recall",
+        desc: "จงอธิบายความหมายของค่าความแม่นยำ (Precision) และค่าความระลึก (Recall) ในแง่ของมุมมองการวัดผล และระบุสูตรการคำนวณของทั้งสองค่า",
+        keywords: ["precision", "recall", "tp/(tp+fp)", "tp/(tp+fn)", "ทาย", "จริง"],
+        partialKeywords: ["tp", "fp", "fn"],
+        solution: "• Precision = TP / (TP + FP) คือ อัตราส่วนที่วัดว่า 'ในบรรดาข้อมูลทั้งหมดที่โมเดลทายว่าเป็นคลาสนั้น มีความถูกต้องตรงกับความเป็นจริงมากน้อยเพียงใด'\n• Recall = TP / (TP + FN) คือ อัตราส่วนที่วัดว่า 'ในบรรดาข้อมูลของจริงทั้งหมดในคลาสนั้น โมเดลสามารถตรวจจับหรือเก็บตกออกมาได้ครบถ้วนเพียงใด'"
+    },
+    {
+        id: 5,
+        title: "ข้อที่ 5: นิยามและความจำเป็นของค่า F1-Score",
+        desc: "เหตุใดในทางประมวลผลภาพจึงไม่ใช้เพียงค่า Accuracy เพียงอย่างเดียว และ F1-Score มีสูตรคำนวณอย่างไร (ระบุทั้งรูป Precision/Recall และรูป TP/FP/FN)?",
+        keywords: ["harmonic", "2*precision*recall", "2tp/(2tp+fp+fn)", "สมดุล", "imbalance"],
+        partialKeywords: ["harmonic", "2tp"],
+        solution: "เพราะค่า Accuracy อาจเกิดความเอนเอียงได้หากชุดข้อมูลไม่สมดุล (Imbalanced Data) ดังนั้น F1-Score ซึ่งเป็นค่าเฉลี่ยฮาร์โมนิก (Harmonic Mean) จึงถูกนำมาใช้เพื่อถ่วงดุลระหว่าง Precision และ Recall โดยมีสูตรคือ F1 = 2*(Precision * Recall) / (Precision + Recall) หรือ F1 = 2TP / (2TP + FP + FN)"
+    },
+    {
+        id: 6,
+        title: "ข้อที่ 6: การเปรียบเทียบ Template Matching: SAD กับ SSD",
+        desc: "จงเปรียบเทียบพฤติกรรมการคำนวณและข้อดี-ข้อจำกัดระหว่าง SAD (Sum of Absolute Differences) และ SSD (Sum of Squared Differences)",
+        keywords: ["ผลต่างสัมบูรณ์", "กำลังสอง", "ยกกำลัง", "ลงโทษ", "เร็ว", "error"],
+        partialKeywords: ["สัมบูรณ์", "กำลังสอง"],
+        solution: "• SAD ใช้ผลรวมของผลต่างสัมบูรณ์ (|I - T|) มีข้อดีคือคำนวณได้รวดเร็วมากเพราะใช้เพียงการบวก/ลบเลข\n• SSD ใช้ผลต่างยกกำลังสอง ((I - T)^2) จะลงโทษค่าความคลาดเคลื่อนขนาดใหญ่ (Large Errors) อย่างรุนแรง ทำให้จุดที่เพี้ยนหนักถูกคัดทิ้งได้ชัดเจน ทั้งสองวิธีใช้เกณฑ์ 'ค่าน้อยที่สุดเข้าใกล้ 0 คือตำแหน่งที่ตรงกันที่สุด'"
+    },
+    {
+        id: 7,
+        title: "ข้อที่ 7: จุดเด่นของ Normalized Cross-Correlation (NCC)",
+        desc: "เหตุใดในสภาพแวดล้อมจริงที่มีแสงสว่างเปลี่ยนแปลง จึงนิยมใช้ Normalized Cross-Correlation (NCC) มากกว่า SAD หรือ Cross-Correlation แบบปกติ?",
+        keywords: ["แสง", "สว่าง", "ความเข้ม", "เฉลี่ย", "คอนทราสต์", "ทน"],
+        partialKeywords: ["แสง", "สว่าง"],
+        solution: "เพราะ NCC มีการหักลบด้วยค่าเฉลี่ยความเข้มแสง (Mean Intensity: I_avg, T_avg) และหารด้วยค่าเบี่ยงเบนมาตรฐานของทั้งสองภาพ ทำให้สูตรนี้มีความทนทานต่อการเปลี่ยนแปลงของระดับความสว่างทั่วทั้งภาพและคอนทราสต์สัมพัทธ์ โดยค่า NCC สูงสุด (เข้าใกล้ +1) แสดงถึงลวดลายความเข้มแสงที่สอดคล้องกันที่สุด"
+    },
+    {
+        id: 8,
+        title: "ข้อที่ 8: เงื่อนไขสมการเวียนบังเกิดของ LCS (Dynamic Programming)",
+        desc: "ในการจับคู่สตริงรหัสลูกโซ่ด้วย Longest Common Subsequence (LCS) จงเขียนสมการเงื่อนไขการเติมตาราง E[i,j] เมื่อสตริงตัวที่ i และ j ตรงกัน และเมื่อไม่ตรงกัน",
+        keywords: ["e[i-1,j-1] + 1", "max", "e[i-1,j]", "e[i,j-1]"],
+        partialKeywords: ["+ 1", "max"],
+        solution: "สมการเงื่อนไขของตารางความเหมือน E[i,j]:\n1. กรณีตัวอักษรตรงกัน (A[i] = B[j]): E[i, j] = E[i-1, j-1] + 1 (ดึงค่าทแยงมุมซ้ายบนบวก 1)\n2. กรณีตัวอักษรไม่ตรงกัน (A[i] != B[j]): E[i, j] = max(E[i-1, j], E[i, j-1]) (เลือกค่าสูงสุดระหว่างช่องด้านบนกับช่องด้านซ้าย)"
+    },
+    {
+        id: 9,
+        title: "ข้อที่ 9: (คำนวณ) การหาเวกเตอร์ค่ากลาง (Mean Vector)",
+        desc: "กำหนดข้อมูลตัวอย่างของคลาส 1 มีเวกเตอร์ลักษณะเฉพาะ 3 ตัวอย่างคือ x1 = [16.6, 5.6], x2 = [16.3, 5.3], และ x3 = [14.4, 5.1] จงคำนวณเวกเตอร์ค่ากลาง m1",
+        keywords: ["15.77", "5.33"],
+        partialKeywords: ["15.7", "5.3"],
+        solution: "ขั้นตอนการคำนวณ:\n• ลักษณะเฉพาะที่ 1: (16.6 + 16.3 + 14.4) / 3 = 47.3 / 3 = 15.77\n• ลักษณะเฉพาะที่ 2: (5.6 + 5.3 + 5.1) / 3 = 16.0 / 3 = 5.33\nดังนั้น เวกเตอร์ค่ากลาง m1 = [15.77, 5.33]"
+    },
+    {
+        id: 10,
+        title: "ข้อที่ 10: (คำนวณ) ระยะห่างระหว่างคลาส (Euclidean Distance)",
+        desc: "หากคลาส 1 มีค่าเฉลี่ย m1 = [15.77, 5.33] และคลาส 2 มีค่าเฉลี่ย m2 = [15.47, 4.33] จงคำนวณระยะห่างระหว่างจุดศูนย์กลางทั้งสองคลาส (d12)",
+        keywords: ["1.04", "1.044", "1.09"],
+        partialKeywords: ["1.0", "1.1"],
+        solution: "ขั้นตอนการคำนวณ:\nd = sqrt((15.77 - 15.47)^2 + (5.33 - 4.33)^2)\n= sqrt((0.30)^2 + (1.00)^2)\n= sqrt(0.09 + 1.00) = sqrt(1.09) ≈ 1.044"
+    },
+    {
+        id: 11,
+        title: "ข้อที่ 11: (คำนวณ) ค่าเบี่ยงเบนมาตรฐาน (std) ภายในคลาส",
+        desc: "กำหนดข้อมูลคุณลักษณะที่ 3 ของคลาส 1 มีค่าคือ 3.4, 3.3, 3.2 (ค่าเฉลี่ย = 3.3) จงคำนวณค่าความแปรปรวนและค่าเบี่ยงเบนมาตรฐาน (std) ของคุณลักษณะนี้",
+        keywords: ["0.0067", "0.08", "0.082"],
+        partialKeywords: ["0.08", "0.006"],
+        solution: "ขั้นตอนการคำนวณ:\n1. ความแปรปรวน = [(3.4 - 3.3)^2 + (3.3 - 3.3)^2 + (3.2 - 3.3)^2] / 3\n= [0.01 + 0 + 0.01] / 3 = 0.02 / 3 ≈ 0.0067\n2. ค่า std = sqrt(0.0067) ≈ 0.0816 หรือประมาณ 0.08"
+    },
+    {
+        id: 12,
+        title: "ข้อที่ 12: (คำนวณ) การหาค่า True Negative (TN) จาก Confusion Matrix",
+        desc: "จากการจำแนกสัตว์ 3 คลาส รวม 40 ตัว: แมวทายถูก(TP)=10 (ทายผิดเป็นสุนัข 1, ม้า 1), สุนัขทายถูก=12 (ทายผิดเป็นแมว 2, ม้า 1), ม้าทายถูก=12 (ทายผิดเป็นสุนัข 1, แมว 0) จงหาค่า TN ของ 'คลาสแมว'",
+        keywords: ["26"],
+        partialKeywords: ["12 + 1 + 1 + 12", "26"],
+        solution: "ขั้นตอนการคำนวณ TN ของคลาสแมว:\nต้องตัดแถวและคอลัมน์ของแมวทิ้ง แล้วรวมช่องที่ไม่เกี่ยวข้องกับแมวทั้งหมด (ช่องสุนัขและม้าที่ตัดกันเอง):\nTN = (สุนัขจริงทายสุนัข) + (สุนัขจริงทายม้า) + (ม้าจริงทายสุนัข) + (ม้าจริงทายม้า)\nTN = 12 + 1 + 1 + 12 = 26 ตัว"
+    },
+    {
+        id: 13,
+        title: "ข้อที่ 13: (คำนวณ) การหา Precision และ Recall จาก Confusion Matrix",
+        desc: "จากข้อ 12 ใน 'คลาสสุนัข' มีสุนัขจริงที่ทายถูก 12 ตัว, สัตว์อื่นทายผิดเป็นสุนัขรวม 2 ตัว (แมว 1, ม้า 1), และสุนัขจริงทายผิดเป็นตัวอื่นรวม 3 ตัว จงหาค่า Precision และ Recall ของคลาสสุนัข",
+        keywords: ["0.8571", "0.8000", "85.71%", "80%"],
+        partialKeywords: ["0.857", "0.80"],
+        solution: "ขั้นตอนการคำนวณสำหรับคลาสสุนัข:\n• TP = 12, FP = 1 + 1 = 2, FN = 3\n• Precision = TP / (TP + FP) = 12 / (12 + 2) = 12 / 14 ≈ 0.8571 (85.71%)\n• Recall = TP / (TP + FN) = 12 / (12 + 3) = 12 / 15 = 0.8000 (80.00%)"
+    },
+    {
+        id: 14,
+        title: "ข้อที่ 14: (คำนวณ) Template Matching: ผลลัพธ์ SAD และ SSD",
+        desc: "กำหนดภาพย่อย I = [12, 18] และ Template T = [10, 20] จงคำนวณค่า SAD และ SSD ระหว่างจุดภาพทั้งสองนี้",
+        keywords: ["sad = 4", "ssd = 8", "4", "8"],
+        partialKeywords: ["4", "8"],
+        solution: "ขั้นตอนการคำนวณ:\n1. SAD = |12 - 10| + |18 - 20| = 2 + 2 = 4\n2. SSD = (12 - 10)^2 + (18 - 20)^2 = 2^2 + (-2)^2 = 4 + 4 = 8"
+    },
+    {
+        id: 15,
+        title: "ข้อที่ 15: (คำนวณ) คะแนนความเหมือนของสายรหัส (Similarity Score R)",
+        desc: "กำหนดสตริง A ยาว 7 ตัวอักษร, สตริง B ยาว 8 ตัวอักษร และมีจำนวนคู่รหัสที่เหมือนกันยาวที่สุด (LCS: M) เท่ากับ 5 จงคำนวณคะแนนความเหมือน R",
+        keywords: ["1.66", "1.67", "5/3"],
+        partialKeywords: ["1.6", "5/3"],
+        solution: "ขั้นตอนการคำนวณตามสูตร R = M / [max(|A|, |B|) - M]:\n• max(|A|, |B|) = max(7, 8) = 8\n• ส่วนหาร = 8 - 5 = 3\n• R = 5 / 3 ≈ 1.6667 (หรือประมาณ 1.67)"
+    }
+];
+
+function renderQuiz() {
+    const container = document.getElementById('questions-container');
+    container.innerHTML = examQuestions.map((q, idx) => `
+        <div class="card" id="card-${q.id}">
+            <div class="card-title">${q.title}</div>
+            <div class="question-desc">${q.desc}</div>
+            <textarea id="input-${q.id}" placeholder="พิมพ์คำตอบหรือแสดงวิธีทำที่นี่..."></textarea>
+            <div>
+                <button type="button" class="btn-submit" onclick="gradeQuestion(${q.id})">ส่งคำตอบ</button>
+            </div>
+            <div class="feedback-box" id="feedback-${q.id}"></div>
+        </div>
+    `).join('');
+}
+
+const statusMap = {};
+
+function gradeQuestion(id) {
+    const q = examQuestions.find(item => item.id === id);
+    const inputEl = document.getElementById(`input-${id}`);
+    const feedbackEl = document.getElementById(`feedback-${id}`);
+    const userText = inputEl.value.trim().toLowerCase();
+
+    if (!userText) {
+        alert("กรุณากรอกคำตอบก่อนกดส่งครับ");
+        return;
+    }
+
+    let matchCount = 0;
+    q.keywords.forEach(kw => {
+        if (userText.includes(kw.toLowerCase())) matchCount++;
+    });
+
+    let partialCount = 0;
+    q.partialKeywords.forEach(pkw => {
+        if (userText.includes(pkw.toLowerCase())) partialCount++;
+    });
+
+    let status = "wrong";
+    let statusLabel = "❌ ยังไม่ถูกต้อง (ต้องปรับปรุงเหตุผลทางคณิตศาสตร์)";
+
+    // เกณฑ์การตัดสินสี
+    if (matchCount >= Math.ceil(q.keywords.length * 0.5) || (q.keywords.length <= 2 && matchCount >= 1 && partialCount >= 1)) {
+        status = "correct";
+        statusLabel = "✅ ถูกต้องสมบูรณ์ (ผ่านเกณฑ์ทางวิชาการ)";
+    } else if (partialCount > 0 || matchCount > 0) {
+        status = "partial";
+        statusLabel = "⚠️ คำตอบเข้าโครง / เกือบถูกต้อง (ยังขาดประเด็นสำคัญ)";
+    }
+
+    statusMap[id] = status;
+
+    feedbackEl.className = `feedback-box ${status}`;
+    feedbackEl.innerHTML = `
+        <strong>ผลการตรวจ:</strong> ${statusLabel}<br>
+        <div class="sol-title">เฉลยและวิธีทำที่สมบูรณ์ตามหลักสูตร:</div>
+        <pre>${q.solution}</pre>
+    `;
+
+    updateDashboard();
+}
+
+function updateDashboard() {
+    let correct = 0, partial = 0, wrong = 0;
+    Object.values(statusMap).forEach(st => {
+        if (st === 'correct') correct++;
+        if (st === 'partial') partial++;
+        if (st === 'wrong') wrong++;
+    });
+    document.getElementById('count-correct').textContent = correct;
+    document.getElementById('count-partial').textContent = partial;
+    document.getElementById('count-wrong').textContent = wrong;
+}
+
+window.onload = renderQuiz;
+</script>
+</body>
+</html>
